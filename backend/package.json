@@ -1,0 +1,9 @@
+{
+  "name": "depthwizard-prototype-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.mjs",
+    "start": "node src/server.mjs"
+  }
+}

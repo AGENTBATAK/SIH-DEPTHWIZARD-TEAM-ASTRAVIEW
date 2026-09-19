@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#040507" />
+    <link rel="icon" href="data:," />
+    <title>DEPTHWIZARD — Single-View Height Estimation &amp; 3D Flythrough</title>
+    <meta
+      name="description"
+      content="DepthWizard turns a single RGB image into measurable 3D terrain. Monocular depth, reference-anchored scale calibration, metric DSM and interactive flythrough. SIH 2026 · PS SIH26175 · ISRO."
+    />
+    <style>
+      /* Pre-paint background so there is never a white flash before React mounts. */
+      html { background: #040507; color-scheme: dark; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      DepthWizard is an interactive WebGL application and requires JavaScript.
+    </noscript>
+    <script type="module" src="/frontend/src/main.tsx"></script>
+  </body>
+</html>

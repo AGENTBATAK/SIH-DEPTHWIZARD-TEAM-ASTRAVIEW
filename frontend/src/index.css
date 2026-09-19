@@ -1,0 +1,444 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------- theme */
+
+@theme {
+  /* Surfaces — OLED black through graphite. The base is deliberately deeper
+     than the panels so glass has something to sit *on*. */
+  --color-void: #040507;
+  --color-abyss: #06080d;
+  --color-graphite: #0a0d14;
+  --color-slate-deep: #101725;
+  --color-slate-mid: #16202f;
+
+  /* Hairlines. White-alpha rather than a mixed grey — grey hairlines on a dark
+     ground read as a border; white at 6–12% reads as an edge catching light. */
+  --color-line: #17202d;
+  --color-line-bright: #243245;
+  --color-hair: rgb(255 255 255 / 0.07);
+  --color-hair-bright: rgb(255 255 255 / 0.13);
+
+  /* Text. */
+  --color-ink: #eef3fa;
+  --color-ink-dim: #97a6bb;
+  --color-ink-faint: #5f6e83;
+
+  /* Signal colours. */
+  --color-cyan-core: #2fe3ff;
+  --color-cyan-deep: #0ea5c9;
+  --color-blue-cool: #4c86f0;
+  --color-teal-sub: #17b3a3;
+  --color-amber-warn: #f0a63c;
+
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', 'Geist Variable', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Concentric radii. A core nested inside a shell must curve about the same
+     centre, so the inner radius is the outer minus the shell padding. */
+  --radius-shell: 2rem;
+  --radius-core: 1.625rem; /* 2rem − 0.375rem */
+  --radius-shell-sm: 1.15rem;
+  --radius-core-sm: 0.9rem; /* 1.15rem − 0.25rem */
+
+  /* Motion. `fluid` is the house curve: a hard initial push that decays for a
+     long time, which is what mass feels like. */
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-power: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Every bare `transition-*` utility inherits the house curve rather than
+     Tailwind's default ease-in-out. */
+  --default-transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-duration: 320ms;
+}
+
+/* ----------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: auto; /* Lenis owns scrolling */
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-cyan-core) 28%, transparent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan-core);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Scrollbar — thin, in-palette, never a default grey slab. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-bright) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-bright);
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-cyan-core) 40%, var(--color-line-bright));
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+canvas {
+  display: block;
+  touch-action: none;
+}
+
+/**
+ * Icon weight.
+ *
+ * Lucide ships at stroke-width 2, which at 14–16px reads as a heavy, blunt
+ * glyph next to type this light. Thinning it globally is the one-line version of
+ * restyling every icon call site.
+ *
+ * The selector matches the *default* weight only. Lucide always emits a
+ * stroke-width attribute, and CSS beats a presentation attribute, so an
+ * unqualified rule would silently override every explicit `strokeWidth` prop as
+ * well — pinning it to `="2"` leaves deliberate weights alone.
+ */
+svg.lucide[stroke-width='2'] {
+  stroke-width: 1.35;
+}
+
+/* ----------------------------------------------------------- components */
+
+/**
+ * Double-bezel (Doppelrand).
+ *
+ * A premium container is never one box. It is a machined tray (`dw-shell`)
+ * holding a plate (`dw-core`) — two enclosures, two radii, two edges catching
+ * light at different intensities. The 6px gap between them is the whole effect:
+ * it is what makes the plate read as a separate physical object rather than a
+ * painted rectangle.
+ *
+ *   <div class="dw-shell"><div class="dw-core"> … </div></div>
+ */
+.dw-shell {
+  position: relative;
+  padding: 0.375rem;
+  border-radius: var(--radius-shell);
+  background: rgb(255 255 255 / 0.028);
+  border: 1px solid var(--color-hair);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 40px 80px -60px rgb(0 0 0 / 0.95);
+}
+
+.dw-core {
+  position: relative;
+  border-radius: var(--radius-core);
+  background: color-mix(in srgb, var(--color-graphite) 94%, transparent);
+  border: 1px solid rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.09);
+}
+
+/* Compact variant, for controls and inline readouts. */
+.dw-shell-sm {
+  padding: 0.25rem;
+  border-radius: var(--radius-shell-sm);
+}
+.dw-shell-sm > .dw-core,
+.dw-core-sm {
+  border-radius: var(--radius-core-sm);
+}
+
+/**
+ * Technical panel. Retained for instrument surfaces (HUDs, terrain overlays)
+ * where the double bezel would eat viewport, but re-tuned onto white-alpha
+ * hairlines and a squircle radius so it belongs to the same family.
+ */
+.dw-panel {
+  background: color-mix(in srgb, var(--color-graphite) 90%, transparent);
+  border: 1px solid var(--color-hair);
+  border-radius: 0.9rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 28px 60px -46px rgb(0 0 0 / 0.95);
+}
+
+.dw-panel-glass {
+  background: color-mix(in srgb, var(--color-abyss) 68%, transparent);
+  /* 14px, not more. This class sits over live WebGL canvases in the HUD, and a
+     backdrop blur has to re-read and re-filter the backdrop every frame — the
+     cost scales with the radius, and past ~16px it starves the compositor on
+     software rendering. */
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--color-hair-bright);
+  border-radius: 1.15rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+/**
+ * Ambient mesh. Three wide, very low-opacity radial orbs. They give the black
+ * ground a direction and a temperature without ever being legible as gradients.
+ * Sits on a pseudo-element so it never intercepts pointer events.
+ */
+.dw-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(62% 52% at 8% -6%, rgb(47 227 255 / 0.11), transparent 68%),
+    radial-gradient(52% 46% at 92% 14%, rgb(23 179 163 / 0.09), transparent 70%),
+    radial-gradient(56% 44% at 48% 108%, rgb(76 134 240 / 0.08), transparent 72%);
+}
+
+/* Tiny technical caption. Used for every label in the interface. */
+.dw-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.dw-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/**
+ * Corner ticks — cheap way to make a rectangle read as a reticle.
+ *
+ * Inset well clear of the corner rather than hung on it. A square tick pinned
+ * to -1px was correct against the old 4px radius; against a 14px squircle it
+ * reads as a mark that has come loose from the frame. Sitting inside, it reads
+ * as a registration mark instead.
+ */
+.dw-ticks {
+  position: relative;
+}
+.dw-ticks::before,
+.dw-ticks::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: var(--color-cyan-core);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.dw-ticks::before {
+  top: 9px;
+  left: 9px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.dw-ticks::after {
+  bottom: 9px;
+  right: 9px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* Coordinate grid backdrop. */
+.dw-grid-bg {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-line) 55%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.dw-grid-fine {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-line) 35%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-line) 35%, transparent) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/**
+ * Film grain. Deliberately subtle — a texture, not an effect.
+ *
+ * Rendered once, fixed to the viewport, outside every scrolling container. A
+ * noise layer attached to scrolling content repaints on every frame of scroll;
+ * fixed, it is composited once and costs nothing.
+ */
+.dw-grain-overlay,
+.dw-grain::after {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* No `mix-blend-mode` here, deliberately. A blended layer spanning the whole
+   viewport has to blend against whatever is beneath it, which on this page is
+   three live WebGL canvases — it collapses the page into one continuously
+   re-rasterised layer and stalls compositing hard enough to time out a headless
+   screenshot. Straight alpha at 3% reads the same at this opacity and costs
+   nothing. */
+
+/* `.dw-grain` is only ever used inside an already-fixed full-screen overlay
+   (boot, processing), so its pseudo-element is fixed too. */
+.dw-grain::after {
+  content: '';
+}
+
+/* Eyebrow pill — the microscopic badge that precedes a major heading. */
+.dw-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-hair-bright);
+  background: rgb(255 255 255 / 0.035);
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+}
+
+/* Single slow scan line, used only over live raster views. */
+.dw-scan::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-cyan-core) 55%, transparent),
+    transparent
+  );
+  animation: dw-scan-sweep 6.5s var(--ease-power) infinite;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+@keyframes dw-scan-sweep {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.6;
+  }
+  92% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/**
+ * Hairline divider with a bright node at the left, like a schematic.
+ *
+ * The line body is white-alpha, not `--color-line`. Against the OLED base a
+ * navy hairline falls below the visibility floor, which leaves the cyan node
+ * hanging in space as a stray dash rather than reading as the start of a rule.
+ */
+.dw-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-cyan-core) 65%, transparent) 0px,
+    color-mix(in srgb, var(--color-cyan-core) 65%, transparent) 18px,
+    rgb(255 255 255 / 0.14) 18px,
+    rgb(255 255 255 / 0.04) 55%,
+    transparent 100%
+  );
+}
+
+/* Magnetic button surface. Transform is driven from JS. */
+.dw-magnetic {
+  will-change: transform;
+  transition: box-shadow 240ms var(--ease-power), border-color 240ms var(--ease-power);
+}
+
+/* Cursor-follow border light for cards. */
+.dw-lightborder {
+  position: relative;
+  isolation: isolate;
+}
+.dw-lightborder::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    180px circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--color-cyan-core) 55%, transparent),
+    transparent 60%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 260ms var(--ease-power);
+  pointer-events: none;
+  z-index: 1;
+}
+.dw-lightborder:hover::before,
+.dw-lightborder:focus-within::before {
+  opacity: 1;
+}
+
+/* Number readouts should never reflow as digits change. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide native cursor only where the custom one is active. */
+.dw-cursor-hidden,
+.dw-cursor-hidden * {
+  cursor: none !important;
+}
+
+/* --------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .dw-scan::before {
+    display: none;
+  }
+}
